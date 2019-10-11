@@ -1,0 +1,50 @@
+<h1>Adverity Advertising Data ETL-V Challenge</h1>
+
+<ul>
+    <li>Select zero to N <i>Data sources</i></li>
+    <li>Select zero to N <i>Campaigns</i></li>
+</ul>
+
+<p>Where zero means "All"</p>
+
+<p>
+    Hitting "Apply", filters the chart to show a timeseries for both Clicks and Impressions for given
+    <i>Data sources</i> and <i>Campaigns</i> - logical AND.
+</p>
+
+<form method="GET">
+    <p>
+        <label for="data-sources">Data sources:</label>
+        <select multiple id="data-sources" name="data-sources">
+            {% for source in data_sources %}
+                <option value="{{source}}">{{source}}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <p>
+        <label for="campaigns">Campaigns:</label>
+        <select multiple id="campaigns" name="campaigns">
+            {% for campaign in campaigns %}
+                <option value="{{campaign}}">{{campaign}}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <p>
+        <input type="submit" value="Apply">
+    </p>
+</form>
+
+<h2>
+    {% if not selected_data_sources %}
+        All Data sources;
+    {% else %}
+        Data sources: {{ selected_data_sources }};
+    {% endif %}
+    {% if not selected_campaigns %}
+        All Campaigns;
+    {% else %}
+        Campaigns: {{ selected_campaigns }};
+    {% endif %}
+</h2>
+{{plot_div | safe}}
+
