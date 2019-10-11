@@ -1,0 +1,4 @@
+-r base.txt
+
+flake8==3.7.8
+mypy==0.720

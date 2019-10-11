@@ -1,0 +1,19 @@
+version: "3.4"
+
+services:
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: adverity-web
+    entrypoint: bash /code/scripts/docker-entrypoint.sh
+    image: adverity-web
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/code
+    environment:
+      ALLOWED_HOSTS: "*"
+      DEBUG: "True"
+      SECRET_KEY: "(a4(o8tnc0rc9#hsof^%l_x8sa#-)_lnchm%+)!o40-=x^a^am"
