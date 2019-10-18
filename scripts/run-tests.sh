@@ -8,4 +8,7 @@ fi
 
 flake8 .
 mypy --cache-dir /tmp/.mypy_cache .
+
+bash scripts/wait-for-it.sh $POSTGRES_HOST:$POSTGRES_PORT -t 30
+
 python manage.py test
