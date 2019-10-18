@@ -2,11 +2,29 @@ version: "3.4"
 
 services:
 
+  postgres:
+    container_name: adverity-postgres
+    healthcheck:
+      test: "pg_isready -h localhost -p 5432 -d adverity -U root --quiet"
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    image: postgres:11.5-alpine
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_DB: adverity
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+
   web:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: adverity-web
+    depends_on:
+      - postgres
     entrypoint: bash /code/scripts/docker-entrypoint.sh
     image: adverity-web
     ports:
@@ -16,4 +34,9 @@ services:
     environment:
       ALLOWED_HOSTS: "*"
       DEBUG: "True"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_NAME: "adverity"
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "root"
       SECRET_KEY: "(a4(o8tnc0rc9#hsof^%l_x8sa#-)_lnchm%+)!o40-=x^a^am"
