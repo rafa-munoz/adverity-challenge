@@ -208,4 +208,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # App settings
 
+# Days to wait to refresh the database from sources
+DATA_REFRESH_DAYS = 1
+
 ENDPOINT_URL = 'http://adverity-challenge.s3-website-eu-west-1.amazonaws.com/DAMKBAoDBwoDBAkOBAYFCw.csv'

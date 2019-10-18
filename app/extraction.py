@@ -1,29 +1,23 @@
-from collections import OrderedDict
 import csv
-import re
-from typing import Dict, Tuple
-from urllib import request
-
+from datetime import datetime
 from io import StringIO
+import logging
+import re
+from typing import List, Tuple
 
-
-def get_data(url: str) -> StringIO:
-    stream = request.urlopen(url)
-    content = stream.read().decode('utf-8')
-    content = StringIO(content)
-    return content
+logger = logging.getLogger(__name__)
 
 
 class CSVData:
     def __init__(self, content: StringIO):
         self._content = content
-        self._timeline: OrderedDict = OrderedDict()
+        self._data: List[dict] = []
         self._data_sources: Tuple = tuple()
         self._campaigns: Tuple = tuple()
 
     @property
-    def timeline(self) -> Dict[str, Dict[str, int]]:
-        return self._timeline
+    def cleaned_data(self) -> List[dict]:
+        return self._data
 
     @property
     def data_sources(self) -> tuple:
@@ -33,50 +27,34 @@ class CSVData:
     def campaigns(self) -> tuple:
         return self._campaigns
 
-    def process(self, filters: Dict[str, list] = None) -> None:
+    def process(self):
         """
-        Given a CSV content, processes the data and .
-
-        :param filters: Dict of filters. Possible keys:
-                        'data_sources', 'campaigns'.
+        Given a CSV content, it processes the data. The processed and validated
+        data can be retrieved using the class' public properties.
         """
         csv_reader = csv.DictReader(self._content)
 
-        self._timeline.clear()
+        self._data.clear()
         data_sources = set()
         campaigns = set()
 
         for row in csv_reader:
             if not self._is_valid_data(row):
+                logger.info(f'Invalid data. Skipped row: {row}')
                 continue
 
-            date = row['Date']
-            data_source = row['Datasource']
-            campaign = row['Campaign']
-            clicks = int(row['Clicks'])
-            impressions = int(row['Impressions'])
-
+            data_source: str = row['Datasource']
+            campaign: str = row['Campaign']
             data_sources.add(data_source)
             campaigns.add(campaign)
 
-            # Apply filters
-            if filters:
-                if isinstance(filters.get('data_sources'), list):
-                    if data_source not in filters['data_sources']:
-                        continue
-
-                if isinstance(filters.get('campaigns'), list):
-                    if campaign not in filters['campaigns']:
-                        continue
-
-            if date not in self.timeline:
-                self.timeline[date] = {
-                    'clicks': clicks,
-                    'impressions': impressions,
-                }
-            else:
-                self.timeline[date]['clicks'] += clicks
-                self.timeline[date]['impressions'] += impressions
+            self._data.append({
+                'date': datetime.strptime(row['Date'], '%d.%m.%Y').date(),
+                'data_source': data_source,
+                'campaign': campaign,
+                'clicks': int(row['Clicks']),
+                'impressions': int(row['Impressions']),
+            })
 
         self._data_sources = tuple(sorted(data_sources))
         self._campaigns = tuple(sorted(campaigns))

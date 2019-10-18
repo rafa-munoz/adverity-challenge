@@ -1,6 +1,7 @@
-from collections import OrderedDict
+from datetime import date
 from io import StringIO
-from unittest import TestCase
+
+from django.test import TestCase
 
 from ..extraction import CSVData
 
@@ -34,121 +35,66 @@ Date,Datasource,Campaign,Clicks,Impressions
              'Offer Campaigns', 'POL Desktop'),
         )
 
-    def test_extract_simple(self):
+    def test_extract(self):
         """
-        Ensures that the most simple form of data extraction works. No filter
-        is applied.
+        Ensures that the data extraction works.
         """
         self.csv_data.process()
-        timeline = self.csv_data.timeline
-        self.assertEqual(
-            [t for t in timeline.keys()],
-            ['01.01.2019', '02.01.2019'],
-        )
-        self.assertEqual(timeline['01.01.2019']['clicks'], 10635)
-        self.assertEqual(timeline['01.01.2019']['impressions'], 798451)
-        self.assertEqual(timeline['02.01.2019']['clicks'], 12)
-        self.assertEqual(timeline['02.01.2019']['impressions'], 1154)
 
-    def test_extract_filter_by_single_datasource(self):
-        """
-        Ensures that filtering by a single datasource works as it should.
-        """
-        self.csv_data.process({'data_sources': ['Facebook Ads']})
-        timeline = self.csv_data.timeline
-        self.assertEqual(
-            [t for t in timeline.keys()],
-            ['01.01.2019'],
+        self.assertListEqual(
+            self.csv_data.cleaned_data,
+            [
+                {
+                    'date': date(2019, 1, 1),
+                    'data_source': 'Facebook Ads',
+                    'campaign': 'Like Ads',
+                    'clicks': 274,
+                    'impressions': 1979,
+                },
+                {
+                    'date': date(2019, 1, 1),
+                    'data_source': 'Facebook Ads',
+                    'campaign': 'Offer Campaigns',
+                    'clicks': 10245,
+                    'impressions': 764627,
+                },
+                {
+                    'date': date(2019, 1, 1),
+                    'data_source': 'Google Adwords',
+                    'campaign': 'Like Ads',
+                    'clicks': 7,
+                    'impressions': 444,
+                },
+                {
+                    'date': date(2019, 1, 1),
+                    'data_source': 'Google Adwords',
+                    'campaign': 'GDN Prio 1 Offer',
+                    'clicks': 16,
+                    'impressions': 12535,
+                },
+                {
+                    'date': date(2019, 1, 1),
+                    'data_source': 'Google Adwords',
+                    'campaign': 'GDN Prio 2 Offer',
+                    'clicks': 93,
+                    'impressions': 18866,
+                },
+                {
+                    'date': date(2019, 1, 2),
+                    'data_source': 'Google Analytics',
+                    'campaign': 'Like Ads',
+                    'clicks': 7,
+                    'impressions': 51,
+                },
+                {
+                    'date': date(2019, 1, 2),
+                    'data_source': 'Google Analytics',
+                    'campaign': 'POL Desktop',
+                    'clicks': 5,
+                    'impressions': 1103,
+                },
+            ]
         )
-        self.assertEqual(timeline['01.01.2019']['clicks'], 10519)
-        self.assertEqual(timeline['01.01.2019']['impressions'], 766606)
-
-    def test_extract_filter_by_multiple_data_sources(self):
-        """
-        Ensures that filtering by multiple data_sources works as it should.
-        """
-        self.csv_data.process(
-            {'data_sources': ['Facebook Ads', 'Google Analytics']}
-        )
-        timeline = self.csv_data.timeline
-        self.assertEqual(
-            [t for t in timeline.keys()],
-            ['01.01.2019', '02.01.2019'],
-        )
-        self.assertEqual(timeline['01.01.2019']['clicks'], 10519)
-        self.assertEqual(timeline['01.01.2019']['impressions'], 766606)
-        self.assertEqual(timeline['02.01.2019']['clicks'], 12)
-        self.assertEqual(timeline['02.01.2019']['impressions'], 1154)
-
-    def test_extract_filter_by_single_campaign(self):
-        """
-        Ensures that filtering by a single campaign works as it should.
-        """
-        self.csv_data.process({'campaigns': ['Like Ads']})
-        timeline = self.csv_data.timeline
-        self.assertEqual(
-            [t for t in timeline.keys()],
-            ['01.01.2019', '02.01.2019'],
-        )
-        self.assertEqual(timeline['01.01.2019']['clicks'], 281)
-        self.assertEqual(timeline['01.01.2019']['impressions'], 2423)
-        self.assertEqual(timeline['02.01.2019']['clicks'], 7)
-        self.assertEqual(timeline['02.01.2019']['impressions'], 51)
-
-    def test_extract_filter_by_multiple_campaigns(self):
-        """
-        Ensures that filtering by a multiple campaigns works as it should.
-        """
-        self.csv_data.process({'campaigns': ['Like Ads', 'POL Desktop']})
-        timeline = self.csv_data.timeline
-        self.assertEqual(
-            [t for t in timeline.keys()],
-            ['01.01.2019', '02.01.2019'],
-        )
-        self.assertEqual(timeline['01.01.2019']['clicks'], 281)
-        self.assertEqual(timeline['01.01.2019']['impressions'], 2423)
-        self.assertEqual(timeline['02.01.2019']['clicks'], 7 + 5)
-        self.assertEqual(timeline['02.01.2019']['impressions'], 51 + 1103)
-
-    def test_extract_filter_by_single_datasource_and_campaign(self):
-        """
-        Ensures that filtering by both datasource and campaign works as it
-        should.
-        """
-        self.csv_data.process({
-            'data_sources': ['Google Analytics'],
-            'campaigns': ['Like Ads']
-        })
-        timeline = self.csv_data.timeline
-
-        self.assertEqual(
-            [t for t in timeline.keys()],
-            ['02.01.2019'],
-        )
-        self.assertEqual(timeline['02.01.2019']['clicks'], 7)
-        self.assertEqual(timeline['02.01.2019']['impressions'], 51)
-
-        self.csv_data.process({
-            'data_sources': ['Facebook Ads'],
-            'campaigns': ['POL Desktop']
-        })
-        timeline = self.csv_data.timeline
-        self.assertEqual(timeline, OrderedDict())
-
-    def test_extract_filter_by_multiple_data_sources_and_campaigns(self):
-        self.csv_data.process({
-            'data_sources': ['Facebook Ads', 'Google Analytics'],
-            'campaigns': ['Like Ads', 'Offer Campaigns'],
-        })
-        timeline = self.csv_data.timeline
-        self.assertEqual(
-            [t for t in timeline.keys()],
-            ['01.01.2019', '02.01.2019'],
-        )
-        self.assertEqual(timeline['01.01.2019']['clicks'], 10519)
-        self.assertEqual(timeline['01.01.2019']['impressions'], 766606)
-        self.assertEqual(timeline['02.01.2019']['clicks'], 7)
-        self.assertEqual(timeline['02.01.2019']['impressions'], 51)
 
 
 class TestCSVDataIsValidData(TestCase):
